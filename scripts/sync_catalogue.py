@@ -35,7 +35,14 @@ def normalize_artist(name):
     return aliases.get(key,' '.join(name.split()))
 
 path=Path('catalogue.json')
+def promotional(title):
+    return bool(re.search(r'\bradio[\s-]+show\b', title or '', re.I))
+
 records=json.loads(path.read_text())
+original_count=len(records)
+records=[r for r in records if not promotional(r.get('title'))]
+if len(records)!=original_count:
+    path.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
 normalized=0
 for record in records:
     name=normalize_artist(record['artist'])
@@ -70,6 +77,11 @@ for url in sorted(urls,key=lambda u: ('larrylush.bandcamp.com' not in u,u)):
     try:
         kind='track' if '/track/' in urllib.parse.urlparse(url).path else 'album'
         p=get(url); t=p.data.get('data-tralbum',{}); c=t.get('current') or {}
+        if promotional(c.get('title') or p.meta.get('og:title') or ''):
+            print('Excluded promotional radio show:',url)
+            if old and old in records:
+                records.remove(old); updated+=1
+            continue
         aid=c.get('id') or t.get('id')
         if not aid:
             m=re.search(kind+r'=(\d+)',p.meta.get('og:video','')+' '+p.meta.get('og:video:secure_url',''))
