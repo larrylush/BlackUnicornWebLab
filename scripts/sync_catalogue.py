@@ -25,8 +25,18 @@ def canonical(url):
     u=urllib.parse.urlparse(url)
     return 'https://'+u.netloc+u.path.rstrip('/')
 
+def normalize_artist(name):
+    key=re.sub(r'[^a-z0-9]+','',name.casefold().replace('&','and'))
+    aliases={'friendsloversandfamily':'Friends, Lovers & Family','flf':'Friends, Lovers & Family','quietman':'Quietman','larrylush':'Larry Lush','blackunicornrecordings':'Black Unicorn Recordings'}
+    return aliases.get(key,' '.join(name.split()))
+
 path=Path('catalogue.json')
 records=json.loads(path.read_text())
+normalized=0
+for record in records:
+    name=normalize_artist(record['artist'])
+    if name!=record['artist']:
+        record['artist']=name; normalized+=1
 known={canonical(r['url']):r for r in records}
 urls=set(known)
 def discover(value,base):
@@ -72,11 +82,11 @@ for url in sorted(urls):
             artist=t.get('artist') or c.get('artist') or p.meta.get('og:site_name')
             art=p.meta.get('og:image')
             if not all(isinstance(x,str) and x for x in (title,artist,art)): raise ValueError('Incomplete metadata')
-            records.append(dict(title=title,artist=artist,genre='Unclassified',kind=kind,img=art,url=url,embed=int(aid),description=c.get('about') or ''))
+            records.append(dict(title=title,artist=normalize_artist(artist),genre='Unclassified',kind=kind,img=art,url=url,embed=int(aid),description=c.get('about') or ''))
             seen_ids[int(aid)]=records[-1]
         updated+=1; print('Imported:',url,aid)
     except Exception as e: print('Skipped:',url,e)
-if updated:
+if updated or normalized:
     path.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
 print('Updated releases:',updated)
 print('Remaining missing IDs:',sum(not r.get('embed') for r in records))
