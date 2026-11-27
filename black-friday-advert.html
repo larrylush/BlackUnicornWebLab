@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Black Unicorn Records | Black Friday</title>
 <style>body{margin:0;background:#171717;color:#fff;font:16px system-ui}main{max-width:520px;margin:auto;padding:16px}canvas{display:block;width:100%;height:auto}button{margin:0 0 14px;padding:10px 16px;background:#e8bb77;color:#111;border:0;font:700 15px system-ui;border-radius:4px}p{margin-top:0}</style>
-<main><button id="save" disabled>Download Facebook PNG</button><p id="status" role="status"></p><canvas id="ad" width="1080" height="1350" aria-label="Black Unicorn Records. Black Friday. 30% off on Bandcamp with Friday26 through Sunday 29 November."></canvas></main>
+<main><button id="save" disabled>Download Facebook PNG</button><p id="status" role="status"></p><canvas id="ad" width="1080" height="1350" aria-label="Black Unicorn Records. Black Friday. 30% off on Bandcamp with Friday26 through Sunday 29 November. Music, merchandise and free audio plug-ins."></canvas></main>
 <script>
 const c=document.querySelector('canvas'), x=c.getContext('2d'), save=document.querySelector('#save'), status=document.querySelector('#status');
 const art=new Image();art.onload=()=>{
@@ -17,16 +17,20 @@ const art=new Image();art.onload=()=>{
   text('INDEPENDENT RECORD LABEL / ELECTRONIC ARTS',73,99,{size:21,space:2.4});
   text('BLACK',67,211,{size:110,weight:900,space:-7});text('UNICORN',67,304,{size:110,weight:900,space:-7});
   text('MUSIC',70,397,{size:104,weight:400,space:-6,stroke:2.3});
-  x.fillStyle=gold;x.fillRect(74,511,76,3);
-  text('BLACK FRIDAY WEEKEND',74,563,{size:28,space:3.8,color:gold});
-  text('30% OFF',65,775,{size:205,weight:900,space:-10});
-  text('ON BANDCAMP',77,840,{size:47,weight:800,space:4});
-  x.strokeStyle=gold;x.lineWidth=2;x.strokeRect(75,906,930,157);
-  text('USE CODE AT CHECKOUT',102,953,{size:20,space:2.5,color:gold});
-  text('Friday26',99,1027,{size:65,weight:800});
-  text('27–29 NOVEMBER  /  ENDS SUNDAY NIGHT',76,1137,{size:26,space:1.8});
-  x.fillStyle='#68615a';x.fillRect(75,1200,930,1);
-  text('Independent music. Without boundaries.',76,1268,{size:31,weight:500,color:gold});
+  x.fillStyle=gold;x.fillRect(74,475,76,3);
+  text('BLACK FRIDAY WEEKEND',74,525,{size:28,space:3.8,color:gold});
+  text('30% OFF',65,710,{size:180,weight:900,space:-10});
+  text('ON BANDCAMP',77,765,{size:47,weight:800,space:4});
+  x.strokeStyle=gold;x.lineWidth=2;x.strokeRect(75,805,930,126);
+  text('USE CODE AT CHECKOUT',102,842,{size:20,space:2.5,color:gold});
+  text('Friday26',99,905,{size:55,weight:800});
+  text('27–29 NOVEMBER  /  ENDS SUNDAY NIGHT',76,978,{size:26,space:1.8});
+  x.fillStyle='#68615a';x.fillRect(75,1015,930,1);
+  text('MUSIC',76,1080,{size:34,weight:800});
+  text('MERCHANDISE',76,1136,{size:34,weight:800});
+  text('FREE AUDIO PLUG-INS',76,1192,{size:34,weight:800,color:gold});
+  x.fillStyle='#68615a';x.fillRect(75,1220,930,1);
+  text('Independent music. Without boundaries.',76,1280,{size:31,weight:500,color:gold});
   save.disabled=false;
 };
 art.onerror=()=>{status.textContent='The artwork could not load.'};
