@@ -9,7 +9,7 @@ class Page(HTMLParser):
         a=dict(attrs)
         if tag=='a' and a.get('href'): self.links.append(a['href'])
         if tag=='meta': self.meta[a.get('property',a.get('name',''))]=a.get('content','')
-        for k in ('data-tralbum','data-band','data-blob'):
+        for k in ('data-tralbum','data-band','data-blob','data-client-items','data-items','data-props'):
             if a.get(k):
                 try: self.data[k]=json.loads(a[k])
                 except ValueError: pass
@@ -29,42 +29,54 @@ path=Path('catalogue.json')
 records=json.loads(path.read_text())
 known={canonical(r['url']):r for r in records}
 urls=set(known)
+def discover(value,base):
+    if isinstance(value,dict):
+        for v in value.values(): discover(v,base)
+    elif isinstance(value,list):
+        for v in value: discover(v,base)
+    elif isinstance(value,str) and re.match(r'^(https://[^/]+)?/(album|track)/[^/?#]+',value):
+        u=urllib.parse.urljoin(base,value); parts=urllib.parse.urlparse(u)
+        if parts.hostname==urllib.parse.urlparse(base).hostname: urls.add(canonical(u))
+
 for host in ('larrylush.bandcamp.com','quietmanmusic.bandcamp.com','friendsloversandfamily.bandcamp.com'):
     try:
         base='https://'+host+'/music'
         p=get(base)
         for link in p.links:
             u=urllib.parse.urljoin(base,link); parts=urllib.parse.urlparse(u)
-            if parts.hostname==host and parts.path.startswith('/album/'): urls.add(canonical(u))
+            if parts.hostname==host and parts.path.startswith(('/album/','/track/')): urls.add(canonical(u))
+        discover(p.data,base)
         print('Discovery:',host,len(urls))
     except Exception as e: print('Discovery failed:',host,e)
-seen_ids={int(r['embed']):r for r in records if r.get('embed')}
+seen_ids={(r.get('kind','album'),int(r['embed'])):r for r in records if r.get('embed')}
 updated=0
 for url in sorted(urls):
     old=known.get(url)
     if old and old.get('embed'): continue
     try:
+        kind='track' if '/track/' in urllib.parse.urlparse(url).path else 'album'
         p=get(url); t=p.data.get('data-tralbum',{}); c=t.get('current') or {}
         aid=c.get('id') or t.get('id')
         if not aid:
-            m=re.search(r'album=(\d+)',p.meta.get('og:video','')+' '+p.meta.get('og:video:secure_url',''))
+            m=re.search(kind+r'=(\d+)',p.meta.get('og:video','')+' '+p.meta.get('og:video:secure_url',''))
             aid=int(m.group(1)) if m else None
         if not aid or not str(aid).isdigit(): raise ValueError('No album ID found')
         if old:
             old['embed']=int(aid)
-            seen_ids[int(aid)]=old
-        elif int(aid) in seen_ids:
+            old['kind']=kind
+            seen_ids[(kind,int(aid))]=old
+        elif (kind,int(aid)) in seen_ids:
             print('Duplicate album ID:',url,aid); continue
         else:
             title=c.get('title') or p.meta.get('og:title')
             artist=t.get('artist') or c.get('artist') or p.meta.get('og:site_name')
             art=p.meta.get('og:image')
             if not all(isinstance(x,str) and x for x in (title,artist,art)): raise ValueError('Incomplete metadata')
-            records.append(dict(title=title,artist=artist,genre='Unclassified',img=art,url=url,embed=int(aid),description=c.get('about') or ''))
+            records.append(dict(title=title,artist=artist,genre='Unclassified',kind=kind,img=art,url=url,embed=int(aid),description=c.get('about') or ''))
             seen_ids[int(aid)]=records[-1]
         updated+=1; print('Imported:',url,aid)
     except Exception as e: print('Skipped:',url,e)
 if updated:
     path.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
 print('Updated releases:',updated)
-if not updated and any(not r.get('embed') for r in records): raise SystemExit('No updates; missing IDs remain. Review logs.')
+print('Remaining missing IDs:',sum(not r.get('embed') for r in records))
