@@ -100,3 +100,42 @@ for r in sorted(records,key=lambda r: 'larrylush.bandcamp.com' not in r['url']):
 if len(unique)!=len(records):
     print('Removed duplicate releases:',len(records)-len(unique))
     path.write_text(json.dumps(list(unique.values()),ensure_ascii=False,indent=2)+'\n')
+
+# Merchandise discovery across all label accounts, including physical album packages.
+mp=Path('merch.json')
+merch=json.loads(mp.read_text())
+products={canonical(r['url']):r for r in merch}
+hosts=('larrylush.bandcamp.com','quietmanmusic.bandcamp.com','friendsloversandfamily.bandcamp.com')
+def merch_links(value,base,out):
+    if isinstance(value,dict):
+        for v in value.values(): merch_links(v,base,out)
+    elif isinstance(value,list):
+        for v in value: merch_links(v,base,out)
+    elif isinstance(value,str):
+        u=urllib.parse.urljoin(base,value)
+        p=urllib.parse.urlparse(u)
+        if p.hostname in hosts and re.match(r'^/merch/[^/]+',p.path): out.add(canonical(u))
+def category(title):
+    t=title.casefold()
+    for pattern,cat in [(r'hoodie|sweatshirt','Hoodies'),(r'tee|t-shirt|t shirt','T-shirts'),(r'vinyl|\blp\b','Vinyl'),(r'\bcd\b|compact disc','CDs'),(r'plug.?in|software|vst','Software'),(r'book|print|poster','Art & books'),(r'bundle','Bundles')]:
+        if re.search(pattern,t): return cat
+    return 'Other'
+for host in hosts:
+    base='https://'+host+'/merch'
+    try:
+        p=get(base); found=set()
+        merch_links(p.links,base,found); merch_links(p.data,base,found)
+        print('Merch discovery:',host,len(found))
+        for url in sorted(found):
+            try:
+                q=get(url)
+                title=q.meta.get('og:title','').strip()
+                art=q.meta.get('og:image','')
+                if not title or not art: raise ValueError('Missing product metadata')
+                old=products.get(url,{})
+                products[url]={**old,'title':title,'category':category(title),'img':art,'url':url,'description':q.meta.get('og:description') or old.get('description',''),'price':old.get('price')}
+                print('Merch imported:',url)
+            except Exception as e: print('Merch skipped:',url,e)
+    except Exception as e: print('Merch discovery failed:',host,e)
+mp.write_text(json.dumps(list(products.values()),ensure_ascii=False,indent=2)+'\n')
+print('Merch products:',len(products))
