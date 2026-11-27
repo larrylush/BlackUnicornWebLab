@@ -4,10 +4,14 @@ from pathlib import Path
 
 class Page(HTMLParser):
     def __init__(self):
-        super().__init__(); self.data={}; self.links=[]; self.meta={}
+        super().__init__(); self.data={}; self.links=[]; self.meta={}; self.tags=set()
     def handle_starttag(self, tag, attrs):
         a=dict(attrs)
-        if tag=='a' and a.get('href'): self.links.append(a['href'])
+        if tag=='a' and a.get('href'):
+            self.links.append(a['href'])
+            u=urllib.parse.urlparse(a['href'])
+            if '/tag/' in u.path and ('tag' in a.get('class','').split() or u.hostname=='bandcamp.com'):
+                self.tags.add(urllib.parse.unquote(u.path.split('/tag/',1)[1]).strip('/').replace('-',' '))
         if tag=='meta': self.meta[a.get('property',a.get('name',''))]=a.get('content','')
         for k in ('data-tralbum','data-band','data-blob','data-client-items','data-items','data-props'):
             if a.get(k):
@@ -62,7 +66,7 @@ seen_ids={(r.get('kind','album'),int(r['embed'])):r for r in records if r.get('e
 updated=0
 for url in sorted(urls,key=lambda u: ('larrylush.bandcamp.com' not in u,u)):
     old=known.get(url)
-    if old and old.get('embed'): continue
+    if old and old.get('embed') and old.get('metadata_checked'): continue
     try:
         kind='track' if '/track/' in urllib.parse.urlparse(url).path else 'album'
         p=get(url); t=p.data.get('data-tralbum',{}); c=t.get('current') or {}
@@ -84,7 +88,12 @@ for url in sorted(urls,key=lambda u: ('larrylush.bandcamp.com' not in u,u)):
             if not all(isinstance(x,str) and x for x in (title,artist,art)): raise ValueError('Incomplete metadata')
             records.append(dict(title=title,artist=normalize_artist(artist),genre='Unclassified',kind=kind,img=art,url=url,embed=int(aid),description=c.get('about') or ''))
             seen_ids[(kind,int(aid))]=records[-1]
-        updated+=1; print('Imported:',url,aid)
+        record=old if old else records[-1]
+        tags=sorted(p.tags)
+        if tags: record['tags']=tags
+        record['release_date']=c.get('release_date') or t.get('album_release_date') or record.get('release_date')
+        record['metadata_checked']=bool(tags)
+        updated+=1; print('Imported:',url,aid,'tags:',tags)
     except Exception as e: print('Skipped:',url,e)
 if updated or normalized:
     path.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
