@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Black Unicorn Records | Black Friday</title>
+<style>body{margin:0;background:#171717;color:#fff;font:16px system-ui}main{max-width:520px;margin:auto;padding:16px}canvas{display:block;width:100%;height:auto}button{margin:0 0 14px;padding:10px 16px;background:#e8bb77;color:#111;border:0;font:700 15px system-ui;border-radius:4px}p{margin-top:0}</style>
+<main><button id="save" disabled>Download Facebook PNG</button><p id="status" role="status"></p><canvas id="ad" width="1080" height="1350" aria-label="Black Unicorn Records. Black Friday. 30% off on Bandcamp with Friday26 through Sunday 29 November."></canvas></main>
+<script>
+const c=document.querySelector('canvas'), x=c.getContext('2d'), save=document.querySelector('#save'), status=document.querySelector('#status');
+const art=new Image();art.onload=()=>{
+  x.fillStyle='#101011';x.fillRect(0,0,1080,1350);
+  x.drawImage(art,0,-155,1080,1080);
+  let shade=x.createLinearGradient(0,0,0,925);shade.addColorStop(0,'rgba(12,12,14,.67)');shade.addColorStop(.51,'rgba(12,12,14,.45)');shade.addColorStop(1,'#101011');x.fillStyle=shade;x.fillRect(0,0,1080,925);
+  shade=x.createLinearGradient(0,0,1080,0);shade.addColorStop(0,'rgba(0,0,0,.42)');shade.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=shade;x.fillRect(0,0,1080,925);
+  const gold='#e8bb77', white='#f5f2ed';
+  function text(v,px,y,{weight=700,size=30,color=white,space=0,stroke=0}={}){
+    x.font=weight+' '+size+'px system-ui, sans-serif';x.textBaseline='alphabetic';x.fillStyle=color;x.strokeStyle=color;x.lineWidth=stroke;x.lineJoin='round';
+    for(const ch of space===0?[v]:v){if(stroke)x.strokeText(ch,px,y);else x.fillText(ch,px,y);px+=x.measureText(ch).width+space}
+  }
+  text('INDEPENDENT RECORD LABEL / ELECTRONIC ARTS',73,99,{size:21,space:2.4});
+  text('BLACK',67,211,{size:110,weight:900,space:-7});text('UNICORN',67,304,{size:110,weight:900,space:-7});
+  text('MUSIC',70,397,{size:104,weight:400,space:-6,stroke:2.3});
+  x.fillStyle=gold;x.fillRect(74,511,76,3);
+  text('BLACK FRIDAY WEEKEND',74,563,{size:28,space:3.8,color:gold});
+  text('30% OFF',65,775,{size:205,weight:900,space:-10});
+  text('ON BANDCAMP',77,840,{size:47,weight:800,space:4});
+  x.strokeStyle=gold;x.lineWidth=2;x.strokeRect(75,906,930,157);
+  text('USE CODE AT CHECKOUT',102,953,{size:20,space:2.5,color:gold});
+  text('Friday26',99,1027,{size:65,weight:800});
+  text('27–29 NOVEMBER  /  ENDS SUNDAY NIGHT',76,1137,{size:26,space:1.8});
+  x.fillStyle='#68615a';x.fillRect(75,1200,930,1);
+  text('Independent music. Without boundaries.',76,1268,{size:31,weight:500,color:gold});
+  save.disabled=false;
+};
+art.onerror=()=>{status.textContent='The artwork could not load.'};
+art.src='/Blackunicornmusic/assets/images/music20to20-1200x1200.webp';
+save.onclick=()=>c.toBlob(blob=>{if(!blob)return;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Black_Unicorn_Black_Friday_2026.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},'image/png');
+</script></html>
