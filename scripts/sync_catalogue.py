@@ -4,19 +4,25 @@ from pathlib import Path
 
 class Page(HTMLParser):
     def __init__(self):
-        super().__init__(); self.data={}; self.links=[]; self.meta={}; self.tags=set()
+        super().__init__(); self.data={}; self.links=[]; self.meta={}; self.tags=set(); self.tag_text=False
     def handle_starttag(self, tag, attrs):
         a=dict(attrs)
         if tag=='a' and a.get('href'):
             self.links.append(a['href'])
             u=urllib.parse.urlparse(a['href'])
-            if '/tag/' in u.path and ('tag' in a.get('class','').split() or u.hostname=='bandcamp.com'):
+            if '/tag/' in u.path:
                 self.tags.add(urllib.parse.unquote(u.path.split('/tag/',1)[1]).strip('/').replace('-',' '))
+        if tag=='a' and 'tag' in a.get('class','').split(): self.tag_text=True
         if tag=='meta': self.meta[a.get('property',a.get('name',''))]=a.get('content','')
         for k in ('data-tralbum','data-band','data-blob','data-client-items','data-items','data-props'):
             if a.get(k):
                 try: self.data[k]=json.loads(a[k])
                 except ValueError: pass
+
+    def handle_data(self, data):
+        if self.tag_text and data.strip(): self.tags.add(data.strip().casefold())
+    def handle_endtag(self, tag):
+        if tag=='a': self.tag_text=False
 
 def get(url):
     time.sleep(2)
@@ -101,8 +107,13 @@ for url in sorted(urls,key=lambda u: ('larrylush.bandcamp.com' not in u,u)):
             records.append(dict(title=title,artist=normalize_artist(artist),genre='Unclassified',kind=kind,img=art,url=url,embed=int(aid),description=c.get('about') or ''))
             seen_ids[(kind,int(aid))]=records[-1]
         record=old if old else records[-1]
-        tags=sorted(p.tags)
-        if tags: record['tags']=tags
+        tags=sorted({x.strip().casefold() for x in p.tags if x.strip()})
+        if tags:
+            record['tags']=tags
+            if record.get('genre','Unclassified')=='Unclassified':
+                for genre, pattern in [('Ambient',r'\bambient\b'),('Trance',r'\btrance\b'),('Breakbeat',r'\b(breakbeat|breaks)\b'),('House',r'\bhouse\b'),('Techno',r'\btechno\b'),('Dub',r'\bdub\b'),('Electronica',r'\b(electronica|electronic)\b')]:
+                    if any(re.search(pattern, tag) for tag in tags):
+                        record['genre']=genre; break
         record['release_date']=c.get('release_date') or t.get('album_release_date') or record.get('release_date')
         record['metadata_checked']=bool(tags)
         updated+=1; print('Imported:',url,aid,'tags:',tags)
