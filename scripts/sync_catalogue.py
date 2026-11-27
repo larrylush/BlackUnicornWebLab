@@ -60,7 +60,7 @@ for host in ('larrylush.bandcamp.com','quietmanmusic.bandcamp.com','friendslover
     except Exception as e: print('Discovery failed:',host,e)
 seen_ids={(r.get('kind','album'),int(r['embed'])):r for r in records if r.get('embed')}
 updated=0
-for url in sorted(urls):
+for url in sorted(urls,key=lambda u: ('larrylush.bandcamp.com' not in u,u)):
     old=known.get(url)
     if old and old.get('embed'): continue
     try:
@@ -83,10 +83,20 @@ for url in sorted(urls):
             art=p.meta.get('og:image')
             if not all(isinstance(x,str) and x for x in (title,artist,art)): raise ValueError('Incomplete metadata')
             records.append(dict(title=title,artist=normalize_artist(artist),genre='Unclassified',kind=kind,img=art,url=url,embed=int(aid),description=c.get('about') or ''))
-            seen_ids[int(aid)]=records[-1]
+            seen_ids[(kind,int(aid))]=records[-1]
         updated+=1; print('Imported:',url,aid)
     except Exception as e: print('Skipped:',url,e)
 if updated or normalized:
     path.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
 print('Updated releases:',updated)
 print('Remaining missing IDs:',sum(not r.get('embed') for r in records))
+
+# Prefer the label account for exact artist/title/format matches.
+def release_key(r):
+    return (normalize_artist(r['artist']).casefold(), ' '.join(r['title'].casefold().split()), r.get('kind','album'))
+unique={}
+for r in sorted(records,key=lambda r: 'larrylush.bandcamp.com' not in r['url']):
+    unique.setdefault(release_key(r),r)
+if len(unique)!=len(records):
+    print('Removed duplicate releases:',len(records)-len(unique))
+    path.write_text(json.dumps(list(unique.values()),ensure_ascii=False,indent=2)+'\n')
