@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Black Unicorn Audio | Free DAW Plug-ins</title>
+<style>body{margin:0;background:#171717;color:#fff;font:16px system-ui}main{max-width:520px;margin:auto;padding:16px}canvas{display:block;width:100%;height:auto}button{margin:0 0 14px;padding:10px 16px;background:#e8bb77;color:#111;border:0;font:700 15px system-ui;border-radius:4px}p{margin-top:0}</style>
+<main><button id="save" disabled>Download Facebook PNG</button><p id="status" role="status"></p><canvas id="ad" width="1080" height="1350" aria-label="Black Unicorn Audio. Free DAW plug-ins. Unicorn Space Reverb, Unicorn Phaser and Unicorn Tape FX."></canvas></main>
+<script>
+const c=document.querySelector('canvas'), x=c.getContext('2d'), save=document.querySelector('#save'), status=document.querySelector('#status');
+const images=["/Blackunicornmusic/assets/images/screenshot202026-11-2520at2012.36.46e280afam-816x429.webp","/Blackunicornmusic/assets/images/screenshot202026-11-2520at2012.37.14e280afam-816x427.webp","/Blackunicornmusic/assets/images/screenshot202026-11-2520at2012.36.14e280afam-816x428.webp"];const load=src=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src});Promise.all(images.map(load)).then(arts=>{const art=arts[0];
+  x.fillStyle='#101011';x.fillRect(0,0,1080,1350);
+  x.drawImage(art,0,0,1080,570);
+  let shade=x.createLinearGradient(0,0,0,925);shade.addColorStop(0,'rgba(12,12,14,.67)');shade.addColorStop(.51,'rgba(12,12,14,.45)');shade.addColorStop(1,'#101011');x.fillStyle=shade;x.fillRect(0,0,1080,925);
+  shade=x.createLinearGradient(0,0,1080,0);shade.addColorStop(0,'rgba(0,0,0,.42)');shade.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=shade;x.fillRect(0,0,1080,925);
+  const gold='#e8bb77', white='#f5f2ed';
+  function text(v,px,y,{weight=700,size=30,color=white,space=0,stroke=0}={}){
+    x.font=weight+' '+size+'px system-ui, sans-serif';x.textBaseline='alphabetic';x.fillStyle=color;x.strokeStyle=color;x.lineWidth=stroke;x.lineJoin='round';
+    for(const ch of space===0?[v]:v){if(stroke)x.strokeText(ch,px,y);else x.fillText(ch,px,y);px+=x.measureText(ch).width+space}
+  }
+  text('INDEPENDENT SOUND DESIGN / ELECTRONIC ARTS',73,99,{size:21,space:2.4});
+  text('BLACK',67,211,{size:110,weight:900,space:-7});text('UNICORN',67,304,{size:110,weight:900,space:-7});
+  text('AUDIO',70,397,{size:104,weight:400,space:-6,stroke:2.3});
+  x.fillStyle=gold;x.fillRect(74,440,76,3);
+  text('FREE',65,625,{size:190,weight:900,space:-9});
+  text('DAW PLUG-INS',72,720,{size:96,weight:900,space:-4});
+  text('THE UNICORN ART COLLECTION',76,780,{size:29,color:gold,space:2});
+  const names=['SPACE REVERB','PHASER','TAPE FX'];
+  arts.forEach((im,i)=>{const px=76+i*316;const w=296,h=175;const scale=Math.min(w/im.width,h/im.height);x.fillStyle='#202020';x.fillRect(px,820,w,h);x.drawImage(im,px+(w-im.width*scale)/2,820+(h-im.height*scale)/2,im.width*scale,im.height*scale);text(names[i],px,1034,{size:25,weight:800});});
+  text('Three effects. Three works of art.',76,1110,{size:36,weight:700});
+  text('Original artwork by WILFISMS',76,1160,{size:27,color:gold});
+  x.fillStyle='#68615a';x.fillRect(75,1200,930,1);
+  text('Discover Black Unicorn Audio',76,1250,{size:36,weight:800,color:gold});
+  text('larrylush.github.io/Blackunicornmusic',76,1290,{size:25,weight:500});
+  save.disabled=false;
+}).catch(()=>{status.textContent='The plug-in artwork could not load.'});
+save.onclick=()=>c.toBlob(blob=>{if(!blob)return;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Black_Unicorn_Free_DAW_Plugins.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},'image/png');
+</script></html>
